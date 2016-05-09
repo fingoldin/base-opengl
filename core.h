@@ -47,8 +47,13 @@ public:
     
 private:
     
+    InputHandler
+    
     std::vector<Vertex> vertices;
     
 };
+
+Core::begin(void) {
+    
 
 #endif
