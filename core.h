@@ -38,7 +38,8 @@ public:
     
     void render(void);
     
-    void clearScreen(void);
+    void clearScreen(void) { glClearColor(this->clear_color[0], this->clear_color[1], this->clear_color[2], this->clear_color[3]);
+                             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
     
     void updateScreen(void);
     
