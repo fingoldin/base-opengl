@@ -1,6 +1,8 @@
 #ifndef INPUTHANDLER_H
 #define INPUTHANDLER_H
 
+#include <GL/glew.h>
+
 class InputHandler
 {
 public:
