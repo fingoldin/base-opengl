@@ -30,7 +30,7 @@ class Core
 {
 public:
     
-    void begin(void);
+    void begin(const char * winName, GLfloat * inVertices, GLfloat * inIndices);
     
     void end(void);
     
@@ -55,7 +55,8 @@ private:
     friend class InputHandler; 
     InputHandler * input_handler;
     
-    std::vector<Vertex> vertices;    
+    GLfloat vertex_data;
+    GLfloat index_data;
     
     int gl_context_version_major,
         gl_context_version_minor,
@@ -71,16 +72,33 @@ private:
     
     GLFWmonitor * window_monitor;
     GLFWwindow * window_share;
+    GLFWwindow * window;
 };
 
-void Core::begin(void)
+void Core::begin(const char * winName, GLfloat * inVertices, GLuint * inIndices)
 {
+    this->vertex_data = inVertices;
+    this->index_data = inIndices;
+    
     this->gl_context_version_major = 3;
     this->gl_context_version_minor = 3;
     this->gl_samples = 8;
     this->gl_opengl_profile = GL_OPENGL_CORE_PROFILE;
     this->gl_resizable = GL_FALSE;
     this->gl_opengl_forward_compat = GL_TRUE;
+    
+    this->window_width = 900;
+    this->window_height = 600;
+    
+    this->window_name = winName;
+    
+    this->window_monitor = NULL;
+    this->window_share = NULL;
+    this->window = NULL;
+    
+    this->input_handler = (InputHandler*)malloc(sizeof(InputHandler));
+    
+    this->init_gl();
 }
 
 void Core::init_gl(void)
@@ -102,6 +120,8 @@ void Core::init_gl(void)
     glfwMakeContextCurrent(this->window);
     
     this->input_handler->begin(this->window);
+    
+    this->init_vertices();
 }
 
 void Core::clearScreen(void) {
