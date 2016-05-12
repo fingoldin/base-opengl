@@ -63,7 +63,12 @@ private:
         gl_samples,
         gl_opengl_profile,
         gl_resizable,
-        gl_opengl_forward_compat;
+        gl_opengl_forward_compat,
+        
+        viewport_x,
+        viewport_y,
+        viewport_w,
+        viewport_h;
     
     GLuint window_width,
            window_height;
@@ -89,6 +94,10 @@ void Core::begin(const char * winName, GLfloat * inVertices, GLuint * inIndices)
     
     this->window_width = 900;
     this->window_height = 600;
+    this->viewport_x = 0;
+    this->viewport_y = 0;
+    this->viewport_w = this->window_width;
+    this->viewport_h = this->window_height;
     
     this->window_name = winName;
     
@@ -103,7 +112,10 @@ void Core::begin(const char * winName, GLfloat * inVertices, GLuint * inIndices)
 
 void Core::init_gl(void)
 {
-    glfwInit();
+    if(glfwInit() != GL_TRUE) {
+        std::printf("\nERROR in Core::init_gl(void): could not initialize GLFW!\n");
+        return;
+    }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, this->gl_context_version_major);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, this->gl_context_version_minor);
     glfwWindowHint(GLFW_SAMPLES, this->gl_samples);
@@ -122,6 +134,16 @@ void Core::init_gl(void)
     this->input_handler->begin(this->window);
     
     this->init_vertices();
+    
+    
+    glewExperimental = GL_TRUE;
+    glewInit();
+    
+    glViewport(this->viewport_x, this->viewport_y, this->viewport_w, this->viewport_h);
+    
+    glEnable(GL_DEPTH_TEST);
+    
+    Shader shader("shader.vs", "shader.frag");
 }
 
 void Core::clearScreen(void) {
