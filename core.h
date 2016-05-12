@@ -38,8 +38,7 @@ public:
     
     void render(void);
     
-    void clearScreen(void) { glClearColor(this->clear_color[0], this->clear_color[1], this->clear_color[2], this->clear_color[3]);
-                             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+    void clearScreen(void)
     
     void updateScreen(void);
     
@@ -51,14 +50,30 @@ public:
     
 private:
     
-    friend class InputHandler;
-    
+    friend class InputHandler; 
     InputHandler * inputHandler;
     
     std::vector<Vertex> vertices;    
+    
+    int gl_context_version_major,
+        gl_context_version_minor,
+        gl_opengl_profile,
+        gl_samples,
+        gl_resizable,
+        gl_opengl_forward_compat;
 };
 
-Core::begin(void) {
+
+void Core::begin(void)
+{
+    glfwInit();
+}
+
+void Core::clearScreen(void) {
+    glClearColor(this->clear_color[0], this->clear_color[1], this->clear_color[2], this->clear_color[3]);
+    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+}
     
 
 #endif
