@@ -52,8 +52,10 @@ private:
     
     void init_gl(void);
     
-    friend class InputHandler; 
+    friend class InputHandler;
+    friend class Shader;
     InputHandler * input_handler;
+    Shader * shader;
     
     GLfloat vertex_data;
     GLfloat index_data;
@@ -74,6 +76,9 @@ private:
            window_height;
     
     std::string window_name;
+    
+    std::string vertex_shader_path;
+    std::string fragment_shader_path;
     
     GLFWmonitor * window_monitor;
     GLFWwindow * window_share;
@@ -101,21 +106,30 @@ void Core::begin(const char * winName, GLfloat * inVertices, GLuint * inIndices)
     
     this->window_name = winName;
     
+    this->vertex_shader_path = "shader.vs";
+    this->fragment_shader_path = "shader.frag";
+    
     this->window_monitor = NULL;
     this->window_share = NULL;
     this->window = NULL;
     
-    this->input_handler = (InputHandler*)malloc(sizeof(InputHandler));
+    this->input_handler = new InputHandler();
     
     this->init_gl();
+}
+
+void Core::end(void)
+{
+    delete this->input_handler;
+    delete this->shader;
 }
 
 void Core::init_gl(void)
 {
     if(glfwInit() != GL_TRUE) {
         std::printf("\nERROR in Core::init_gl(void): could not initialize GLFW!\nTerminating program...\n");
-        free(this->input_handler);
-        exit(1);
+        delete this->input_handler;
+        std::exit(1);
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, this->gl_context_version_major);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, this->gl_context_version_minor);
@@ -137,15 +151,15 @@ void Core::init_gl(void)
     glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_OK) {
         std::printf("\nERROR in Core::init_gl(void): could not initialize GLEW!\nTerminating program...\n");
-        free(this->input_handler);
-        exit(1);
+        delete this->input_handler;
+        std::exit(1);
     }
     
     glViewport(this->viewport_x, this->viewport_y, this->viewport_w, this->viewport_h);
     
     glEnable(GL_DEPTH_TEST);
     
-    Shader shader("shader.vs", "shader.frag");
+    this->shader = new Shader(this->vertex_shader_path.c_str(), this->fragment_shader_path.c_str());
     
     this->init_vertices();
 }
