@@ -120,6 +120,8 @@ void Core::begin(const char * winName, GLfloat * inVertices, GLuint * inIndices)
 
 void Core::end(void)
 {
+    glfwTerminate();
+    
     delete this->input_handler;
     delete this->shader;
 }
