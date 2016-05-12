@@ -50,23 +50,58 @@ public:
     
 private:
     
+    void init_gl(void);
+    
     friend class InputHandler; 
-    InputHandler * inputHandler;
+    InputHandler * input_handler;
     
     std::vector<Vertex> vertices;    
     
     int gl_context_version_major,
         gl_context_version_minor,
-        gl_opengl_profile,
         gl_samples,
+        gl_opengl_profile,
         gl_resizable,
         gl_opengl_forward_compat;
+    
+    GLuint window_width,
+           window_height;
+    
+    std::string window_name;
+    
+    GLFWmonitor * window_monitor;
+    GLFWwindow * window_share;
 };
-
 
 void Core::begin(void)
 {
+    this->gl_context_version_major = 3;
+    this->gl_context_version_minor = 3;
+    this->gl_samples = 8;
+    this->gl_opengl_profile = GL_OPENGL_CORE_PROFILE;
+    this->gl_resizable = GL_FALSE;
+    this->gl_opengl_forward_compat = GL_TRUE;
+}
+
+void Core::init_gl(void)
+{
     glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, this->gl_context_version_major);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, this->gl_context_version_minor);
+    glfwWindowHint(GLFW_SAMPLES, this->gl_samples);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, this->gl_opengl_profile);
+    glfwWindowHint(GLFW_RESIZABLE, gl_resizable);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, this->gl_opengl_forward_compat);
+    
+    this->window = glfwCreateWindow(this->window_width, 
+                                    this->window_height, 
+                                    this->window_name.c_str(), 
+                                    this->window_monitor, 
+                                    this->window_share
+    );
+    glfwMakeContextCurrent(this->window);
+    
+    this->input_handler->begin(this->window);
 }
 
 void Core::clearScreen(void) {
@@ -74,6 +109,6 @@ void Core::clearScreen(void) {
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 }
-    
+     
 
 #endif
