@@ -113,8 +113,9 @@ void Core::begin(const char * winName, GLfloat * inVertices, GLuint * inIndices)
 void Core::init_gl(void)
 {
     if(glfwInit() != GL_TRUE) {
-        std::printf("\nERROR in Core::init_gl(void): could not initialize GLFW!\n");
-        return;
+        std::printf("\nERROR in Core::init_gl(void): could not initialize GLFW!\nTerminating program...\n");
+        free(this->input_handler);
+        exit(1);
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, this->gl_context_version_major);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, this->gl_context_version_minor);
@@ -133,17 +134,20 @@ void Core::init_gl(void)
     
     this->input_handler->begin(this->window);
     
-    this->init_vertices();
-    
-    
     glewExperimental = GL_TRUE;
-    glewInit();
+    if(glewInit() != GLEW_OK) {
+        std::printf("\nERROR in Core::init_gl(void): could not initialize GLEW!\nTerminating program...\n");
+        free(this->input_handler);
+        exit(1);
+    }
     
     glViewport(this->viewport_x, this->viewport_y, this->viewport_w, this->viewport_h);
     
     glEnable(GL_DEPTH_TEST);
     
     Shader shader("shader.vs", "shader.frag");
+    
+    this->init_vertices();
 }
 
 void Core::clearScreen(void) {
