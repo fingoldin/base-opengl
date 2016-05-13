@@ -18,7 +18,7 @@ struct Vertex {
     glm::vec3 Position;
     glm::vec3 Normal;
     glm::vec2 UV;
-    GLushort tex;
+    GLushort Tex;
 };
 
 class Mesh
@@ -41,7 +41,10 @@ private:
     int32_t num_indices;
     GLushort num_texs;
     
+    glm::mat4 model_mat;
+    
     std::vector<Texture> textures;
+    std::vector<Vertex> vertices;
 
 };
 
@@ -53,6 +56,7 @@ Mesh::Mesh(GLfloat * positions, GLfloat * normals, GLfloat * UVs, GLuint * indic
     this->index_data = indices;
     this->num_indices = numindices;
     this->num_texs = (GLushort)texpaths.size();
+    this->model_mat = glm::mat4(1.0f);
     
     for(int i = 0; i < this->num_texs; i++)
     {
@@ -75,6 +79,11 @@ Mesh::Mesh(GLfloat * positions, GLfloat * normals, GLfloat * UVs, GLuint * indic
                                     *(this->normal_data + 3 * index_data[4*i + 1] + 1),
                                     *(this->normal_data + 3 * index_data[4*i + 1] + 2));
         
+        vertex.UV = glm::vec2(*(this->UV_data + 2 * index_data[4*i + 2]), 
+                                    *(this->UV_data + 2 * index_data[4*i + 2] + 1));
+        
+        vertex.Tex = (GLushort)*(this->indices[4*i + 3]);
+        
         this->vertices.push_back(vertex);
     }
     
@@ -83,8 +92,27 @@ Mesh::Mesh(GLfloat * positions, GLfloat * normals, GLfloat * UVs, GLuint * indic
     
     glBindVertexArray(this->VAO);
     
-    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);    
+    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), &this->vertices[0], GL_STATIC_DRAW);
     
+    glEnableVertexAttribPointer(0);
+    glVertexAttribPoonter(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+    
+    glEnableVertexAttribPointer(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Normal));
+    
+    glEnableVertexAttribPointer(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, UV));
+    
+    glEnableVertexAttribPointer(3);
+    glVertexAttribIPointer(3, 1, GL_UNSIGNED_SHORT, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Tex));
+    
+    glBindVertexArray(0);
+}
+
+void Mesh::render(Shader * shader)
+{
+    this->model_mat = glm::mat4(1.0f);
     
 }
 
