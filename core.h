@@ -28,7 +28,7 @@ class Core
 {
 public:
     
-    void begin(const char * winName, GLfloat * inVertices, GLfloat * inIndices);
+    void begin(const char * winName);
     
     void end(void);
     
@@ -41,20 +41,15 @@ public:
     void updateScreen(void);
     
     Core() {}
-    ~Core() {}
-    
-    Vertex getVertexOfIndex(GLuint index) { return this->vertices[index]; }
-    
+    ~Core() {}  
     
 private:
     
     void init_gl(void);
+    void setup_meshes(void);
     
     friend class Shader;
     Shader * shader;
-    
-    GLfloat vertex_data;
-    GLfloat index_data;
     
     int gl_context_version_major,
         gl_context_version_minor,
@@ -81,13 +76,18 @@ private:
     GLFWwindow * window;
     
     GLfloat ltime;
+    
+    glm::mat4 model_mat;
+    glm::mat4 view_mat;
+    glm::mat4 projection_mat;
+    
+    glm::vec3 cam_position;
+    glm::vec3 cam_target;
+    glm::vec3 cam_up;
 };
 
-void Core::begin(const char * winName, GLfloat * inVertices, GLuint * inIndices)
+void Core::begin(const char * winName)
 {
-    this->vertex_data = inVertices;
-    this->index_data = inIndices;
-    
     this->gl_context_version_major = 3;
     this->gl_context_version_minor = 3;
     this->gl_samples = 8;
@@ -113,6 +113,14 @@ void Core::begin(const char * winName, GLfloat * inVertices, GLuint * inIndices)
     
     this->ltime = 0;
     
+    this->model_mat = glm::mat4(1.0f);
+    this->view_mat = glm::mat4(1.0f);
+    this->projection_mat = glm::mat4(1.0f);
+    
+    this->cam_position = glm::vec3(0.0f, 0.0f, 1.0f);
+    this->cam_target = glm::vec3(0.0f, 0.0f, 0.0f);
+    this->cam_up = glm::vec3(0.0f, 1.0f, 0.0f);
+    
     this->init_gl();
 }
 
@@ -134,8 +142,31 @@ void Core::update()
     this->shader->Use();
     
     this->model_mat = glm::mat4(1.0f);
-    this->view_mat = this->camera->GetViewMatrix();
-    this->projection_mat = glm::
+    this->view_mat = glm::lookAt(this->cam_position, this->cam_target, this->cam_up);
+    this->projection_mat = glm::perspective(glm::radians(45.0f), this->window_width / this->window_height, 0.1f, 100.0f);
+    
+    glUniformMatrix4fv(glGetUniformLocation(this->shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(this->model_mat));
+    glUniformMatrix4fv(glGetUniformLocation(this->shader->Program, "view"), 1, GL_FALSE, glm::value_ptr(this->view_mat));
+    glUniformMatrix4fv(glGetUniformLocation(this->shader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(this->projection_mat));
+}
+
+void Core::render()
+{
+    for(int i = 0; i < this->meshes.size(); i++)
+        this->meshes[i].render();
+}
+
+void Core::clearScreen(void)
+{
+    glClearColor(this->clear_color[0], this->clear_color[1], this->clear_color[2], this->clear_color[3]);
+    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+}
+
+void Core::updateScreen(void)
+{
+    glfwSwapBuffers();
+}
 
 void Core::init_gl(void)
 {
@@ -174,12 +205,5 @@ void Core::init_gl(void)
     
     this->shader = new Shader(this->vertex_shader_path.c_str(), this->fragment_shader_path.c_str());
 }
-
-void Core::clearScreen(void) {
-    glClearColor(this->clear_color[0], this->clear_color[1], this->clear_color[2], this->clear_color[3]);
-    
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-}
-     
 
 #endif
