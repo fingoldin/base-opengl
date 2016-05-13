@@ -13,8 +13,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transformation.hpp>
 
-#include "inputhandler.h"
-
 struct Vertex {
     glm::vec3 Position;
     
@@ -52,9 +50,7 @@ private:
     
     void init_gl(void);
     
-    friend class InputHandler;
     friend class Shader;
-    InputHandler * input_handler;
     Shader * shader;
     
     GLfloat vertex_data;
@@ -83,6 +79,8 @@ private:
     GLFWmonitor * window_monitor;
     GLFWwindow * window_share;
     GLFWwindow * window;
+    
+    GLfloat ltime;
 };
 
 void Core::begin(const char * winName, GLfloat * inVertices, GLuint * inIndices)
@@ -113,7 +111,7 @@ void Core::begin(const char * winName, GLfloat * inVertices, GLuint * inIndices)
     this->window_share = NULL;
     this->window = NULL;
     
-    this->input_handler = new InputHandler();
+    this->ltime = 0;
     
     this->init_gl();
 }
@@ -122,15 +120,27 @@ void Core::end(void)
 {
     glfwTerminate();
     
-    delete this->input_handler;
     delete this->shader;
 }
+
+void Core::update()
+{
+    GLfloat ctime = glfwGetTime();
+    GLfloat dtime = ctime - ltime;
+    ltime = ctime;
+    
+    glfwPollEvents();
+    
+    this->shader->Use();
+    
+    this->model_mat = glm::mat4(1.0f);
+    this->view_mat = this->camera->GetViewMatrix();
+    this->projection_mat = glm::
 
 void Core::init_gl(void)
 {
     if(glfwInit() != GL_TRUE) {
         std::printf("\nERROR in Core::init_gl(void): could not initialize GLFW!\nTerminating program...\n");
-        delete this->input_handler;
         std::exit(1);
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, this->gl_context_version_major);
@@ -148,12 +158,13 @@ void Core::init_gl(void)
     );
     glfwMakeContextCurrent(this->window);
     
-    this->input_handler->begin(this->window);
+    glfwSetKeyCallback(window, this->key_callback);
+    glfwSetCursorPosCallback(window, this->mouse_callback);
+    glfwSetScrollCallback(window, this->scroll_callback);
     
     glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_OK) {
         std::printf("\nERROR in Core::init_gl(void): could not initialize GLEW!\nTerminating program...\n");
-        delete this->input_handler;
         std::exit(1);
     }
     
@@ -162,8 +173,6 @@ void Core::init_gl(void)
     glEnable(GL_DEPTH_TEST);
     
     this->shader = new Shader(this->vertex_shader_path.c_str(), this->fragment_shader_path.c_str());
-    
-    this->init_vertices();
 }
 
 void Core::clearScreen(void) {
