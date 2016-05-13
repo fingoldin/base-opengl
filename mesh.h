@@ -113,6 +113,13 @@ Mesh::Mesh(GLfloat * positions, GLfloat * normals, GLfloat * UVs, GLuint * indic
 void Mesh::render(Shader * shader)
 {
     this->model_mat = glm::mat4(1.0f);
+    glUniformMatrix4fv(glGetUniformLocation(shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(this->model_mat));
+    
+    for(int i = 0; i < this->textures.size(); i++)
+    {
+        glActiveTexture(GL_TEXTURE0 + i);
+        
+        
     
 }
 
