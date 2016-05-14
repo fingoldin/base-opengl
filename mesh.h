@@ -119,8 +119,23 @@ void Mesh::render(Shader * shader)
     {
         glActiveTexture(GL_TEXTURE0 + i);
         
+        std::string num = std::to_string(i);
+        glUniform1i(glGetUniformLocation(shader->Program, ("textures[" + num + "]").c_str()), i);
         
+        glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
+    }
     
+    glBindVertexArray(this->VAO);
+    glDrawArrays(GL_TRIANGLES, 0, this->vertices.size());
+    glBindVertexArray(0);
+    
+    for (int i = 0; i < this->textures.size(); i++)
+    {
+         glActiveTexture(GL_TEXTURE0 + i);
+         glBindTexture(GL_TEXTURE_2D, 0);
+     }
+    
+    glUniformMatrix4fv(glGetUniformLocation(shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 }
 
 #endif
