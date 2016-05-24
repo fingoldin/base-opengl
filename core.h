@@ -21,6 +21,20 @@
 #include "mesh.h"
 
 
+enum CamState {
+    CAM_FP_NORMAL,
+    CAM_FP_FIXEDPOS,
+    CAM_FP_FIXED,
+    CAM_FREE
+};
+
+enum GameState {
+    GAME_NORMAL,
+    GAME_MAINMENU,
+    GAME_PAUSEMENU
+};
+    
+
 class Core
 {
 public:
@@ -45,28 +59,28 @@ public:
 private:
     
     void init_gl(void);
-    void setup_meshes(void);
+    void setup_models(void);
     
-    void key_callback(GLFWwindow * window, int key, int scancode, int action, int mode);
-    void scroll_callback(GLFWwindow * window, double xoffset, double yoffset);
-    void mouse_callback(GLFWwindow * window, double xpos, double ypos);
+    void draw_viewmodel(void);
+    
+    void update_matrices(void);
+    void update_models(void);
     
     friend class Shader;
-    Shader * shader;
     
-    bool keys[1024];
+    GameState State;
     
-    int gl_context_version_major,
-        gl_context_version_minor,
-        gl_samples,
-        gl_opengl_profile,
-        gl_resizable,
-        gl_opengl_forward_compat,
-        
-        viewport_x,
-        viewport_y,
-        viewport_w,
-        viewport_h;
+    GLint gl_context_version_major,
+          gl_context_version_minor,
+          gl_samples,
+          gl_opengl_profile,
+          gl_resizable,
+          gl_opengl_forward_compat,
+          
+          viewport_x,
+          viewport_y,
+          viewport_w,
+          viewport_h;
     
     GLuint window_width,
            window_height;
@@ -93,6 +107,8 @@ private:
 
 void Core::begin(const char * winName)
 {
+    this->State = GAME_MAINMENU;
+    
     this->gl_context_version_major = 3;
     this->gl_context_version_minor = 3;
     this->gl_samples = 8;
@@ -132,8 +148,6 @@ void Core::begin(const char * winName)
 void Core::end(void)
 {
     glfwTerminate();
-    
-    delete this->shader;
 }
 
 bool Core::shouldClose()
@@ -216,28 +230,8 @@ void Core::init_gl(void)
     
     glEnable(GL_DEPTH_TEST);
     
-    this->shader = new Shader(this->vertex_shader_path.c_str(), this->fragment_shader_path.c_str());
+    this->setup_models();
 }
 
-void Core::key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
-{
-    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(this->window, GL_TRUE);
-
-    if(action == GLFW_PRESS)
-        this->keys[key] = true;
-    else if(action == GLFW_RELEASE)
-        this->keys[key] = false;	
-}
-
-void scroll_callback(GLFWwindow * window, double xoffset, double yoffset)
-{
-
-}
-
-void mouse_callback(GLFWwindow * window, double xpos, double ypos)
-{
-
-}
 
 #endif
