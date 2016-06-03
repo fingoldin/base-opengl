@@ -75,30 +75,9 @@ Mesh::Mesh(tinyobj::shape_t &shape)
 
 void Mesh::render(Shader * shader)
 {
-    this->model_mat = glm::mat4(1.0f);
-    glUniformMatrix4fv(glGetUniformLocation(shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(this->model_mat));
-    
-    for(int i = 0; i < this->textures.size(); i++)
-    {
-        glActiveTexture(GL_TEXTURE0 + i);
-        
-        std::string num = std::to_string(i);
-        glUniform1i(glGetUniformLocation(shader->Program, ("textures[" + num + "]").c_str()), i);
-        
-        glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
-    }
-    
     glBindVertexArray(this->VAO);
-    glDrawArrays(GL_TRIANGLES, 0, this->vertices.size());
+    glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
-    
-    for (int i = 0; i < this->textures.size(); i++)
-    {
-         glActiveTexture(GL_TEXTURE0 + i);
-         glBindTexture(GL_TEXTURE_2D, 0);
-     }
-    
-    glUniformMatrix4fv(glGetUniformLocation(shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 }
 
 #endif
