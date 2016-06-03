@@ -18,22 +18,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transformation.hpp>
 
+#include "shader.h"
 #include "mesh.h"
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
 
-enum CamState {
-    CAM_FP_NORMAL,
-    CAM_FP_FIXEDPOS,
-    CAM_FP_FIXED,
-    CAM_FREE
-};
-
-enum GameState {
-    GAME_NORMAL,
-    GAME_MAINMENU,
-    GAME_PAUSEMENU
-};
-    
 
 class Core
 {
@@ -61,14 +51,12 @@ private:
     void init_gl(void);
     void setup_models(void);
     
-    void draw_viewmodel(void);
-    
     void update_matrices(void);
     void update_models(void);
     
-    friend class Shader;
+    void add_model_from_obj(const std::string &file, const std::string &mtl_base);
     
-    GameState State;
+    friend class Shader;
     
     GLint gl_context_version_major,
           gl_context_version_minor,
@@ -90,6 +78,8 @@ private:
     std::string vertex_shader_path;
     std::string fragment_shader_path;
     
+    Shader * shader;
+    
     GLFWmonitor * window_monitor;
     GLFWwindow * window_share;
     GLFWwindow * window;
@@ -107,8 +97,6 @@ private:
 
 void Core::begin(const char * winName)
 {
-    this->State = GAME_MAINMENU;
-    
     this->gl_context_version_major = 3;
     this->gl_context_version_minor = 3;
     this->gl_samples = 8;
@@ -143,10 +131,13 @@ void Core::begin(const char * winName)
     this->cam_up = glm::vec3(0.0f, 1.0f, 0.0f);
     
     this->init_gl();
+    this->setup_models();
 }
 
 void Core::end(void)
 {
+    delete this->shader;
+    
     glfwTerminate();
 }
 
@@ -230,7 +221,43 @@ void Core::init_gl(void)
     
     glEnable(GL_DEPTH_TEST);
     
+    this->shader = new Shader(this->vertex_shader_path.c_str(), this->fragment_shader_path.c_str());
+    
     this->setup_models();
+}
+
+void Core::setup_models(void)
+{
+    this->add_model_from_obj("mannequin/Mannequin.obj", "mannequin/");
+}
+
+void add_model_from_obj(const std::string &file, const std::string &mtl_base)
+{
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> mats;
+    
+    std::string err;
+    bool ret;
+    if(mtl_base.empty()) {
+        ret = tinyobj::LoadObj(shapes, mats, err, obj_file.c_str(), NULL, 1);
+    }
+    else {
+        ret = tinyobj::LoadObj(shapes, mats, err, obj_file.c_str(), mtl_base.c_str(), 1);
+    }
+    
+    if (!err.empty()) {
+        std::printf("Error while loading obj file from path '%s': %s\n", file.c_str(), err.c_str());
+    }
+    
+    if (!ret) {
+        std::printf("Failed to load/parse .obj from path '%s'\n", obj_file.c_str());
+        this->end();
+        std::exit(1);
+    }
+    
+    for(size_t f = 0; f < shapes.size(); f++) {
+        this->meshes.push_back(Mesh(shapes[f]));
+    }
 }
 
 
